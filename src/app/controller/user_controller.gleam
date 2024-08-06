@@ -1,3 +1,4 @@
+
 import app/service/user_service
 import app/web
 import gleam/http
@@ -10,11 +11,11 @@ pub fn get_by_id(
   context ctx: web.Context,
   id id: String,
 ) {
-
   let method = req.method
 
   let user_id = result.try(Ok(id), int.parse)
 
+  // Dispatch to the appropriate handler based on the HTTP method.
   case user_id {
     Ok(id) -> {
       case method {
@@ -24,5 +25,13 @@ pub fn get_by_id(
     }
     Error(_) -> wisp.bad_request()
   }
-  // Dispatch to the appropriate handler based on the HTTP method.
+}
+
+pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
+  let method = req.method
+
+  case method {
+    http.Get -> user_service.get_all(ctx)
+    _ -> wisp.method_not_allowed([http.Get])
+  }
 }

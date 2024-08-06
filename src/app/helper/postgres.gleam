@@ -84,7 +84,7 @@ pub fn run_read_query(query qry: ReadQuery, decoder dcdr, db_connection db_conn)
       }
     })
 
-  wisp.log_info("db_params: ")
+  pprint.debug("Parametri passati al Database: ")
   pprint.debug(db_params)
 
   let result = sql |> pgo.execute(on: db_conn, with: db_params, expecting: dcdr)

@@ -8,11 +8,11 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
   case wisp.path_segments(req) {
     // Homepage
-    [] -> {
-      wisp.html_response(string_builder.from_string("Home"), 200)
-    }
+    [] -> wisp.html_response(string_builder.from_string("Home"), 200)
 
-    ["users", "user", id] -> user_controller.get_by_id(req, ctx, id)
+    // User endpoints
+    ["users", "all"] -> user_controller.get_all(req, ctx)
+    ["users", "get-user", id] -> user_controller.get_by_id(req, ctx, id)
 
     // All the empty responses
     ["internal-server-error"] -> wisp.internal_server_error()
