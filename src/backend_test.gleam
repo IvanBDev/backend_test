@@ -1,20 +1,20 @@
-import app/web
-import app/router
 import app/helper/postgres
-import gleam/pgo
-import gleam/erlang/process
+import app/router
+import app/web
 import dot_env
 import dot_env/env
-import wisp
+import gleam/erlang/process
+import gleam/pgo
 import mist
+import wisp
 
 pub fn main() {
   wisp.configure_logger()
 
-  dot_env.new() 
-  |> dot_env.set_path(".env") 
-  |> dot_env.set_debug(False) 
-  |> dot_env.load 
+  dot_env.new()
+  |> dot_env.set_path(".env")
+  |> dot_env.set_debug(False)
+  |> dot_env.load
   let assert Ok(secret_key_base) = env.get_string("SECRET_KEY_BASE")
 
   // Start a database connection pool.

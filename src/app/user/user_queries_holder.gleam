@@ -1,5 +1,5 @@
-import cake/where
 import cake/select
+import cake/where
 
 pub fn get_by_id_query(id id: Int) -> select.ReadQuery {
   select.new()
@@ -14,10 +14,8 @@ pub fn get_by_id_query(id id: Int) -> select.ReadQuery {
 }
 
 pub fn get_all_query() -> select.ReadQuery {
-    select.new()
-    |> select.select(
-        select.col("*")
-    )
-    |> select.from_table("public.user")
-    |> select.to_query()
+  select.new()
+  |> select.select(select.col("*"))
+  |> select.from_table("public.user")
+  |> select.to_query()
 }

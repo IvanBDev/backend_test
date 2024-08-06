@@ -14,7 +14,6 @@ import gleam/list
 import gleam/option.{Some}
 import gleam/pgo.{type Connection, type Value}
 import pprint
-import wisp
 
 pub fn read_query_to_prepared_statement(
   query qry: ReadQuery,
