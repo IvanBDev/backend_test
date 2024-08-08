@@ -44,7 +44,6 @@ pub fn get_all(context ctx: web.Context) -> wisp.Response {
   pprint.debug(list_of_users)
 
   let output_from_postgres = list.map(list_of_users, user.from_postgres)
-  // use prova <- list.map(list_of_users)
 
   let user_list_for_get_all =
     get_response_from_db_object_for_get_all_function(output_from_postgres)
@@ -68,8 +67,24 @@ pub fn create_user(
   pprint.debug(user_created)
 
   pprint.debug("---------------- create_user (start) ------------------")
-  
+
   wisp.created()
+}
+
+pub fn update_user(context ctx: web.Context, user_for_update user: user.User) {
+  pprint.debug("---------------- update_user (start) ------------------")
+
+  let query = user_queries_holder.update_user_query(user)
+
+  let assert Ok(user_updated) =
+    query |> postgres.run_write_query(dynamic.dynamic, ctx.db)
+
+  pprint.debug("Result from query: ")
+  pprint.debug(user_updated)
+
+  pprint.debug("---------------- update_user (end) ------------------")
+
+  web.custom_created("Record aggiornato correttamente")
 }
 
 fn get_response_from_db_object_for_get_one_function(

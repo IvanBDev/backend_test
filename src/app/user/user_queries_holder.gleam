@@ -1,6 +1,7 @@
 import app/user/user
 import cake/insert
 import cake/select
+import cake/update
 import cake/where
 
 pub fn get_by_id_query(id id: Int) -> select.ReadQuery {
@@ -30,4 +31,18 @@ pub fn create_user_query(
     "username", "email",
   ])
   |> insert.to_query()
+}
+
+pub fn update_user_query(
+  user_from_request user: user.User,
+) -> update.WriteQuery(_) {
+  update.new()
+  |> update.table(table_name: "public.user")
+  |> update.sets(set: [
+    // "id" |> update.set_int(user.id),
+    "username" |> update.set_string(user.username),
+    "email" |> update.set_string(user.email),
+  ])
+  |> update.where(where.eq(where.col("id"), where.int(user.id)))
+  |> update.to_query()
 }

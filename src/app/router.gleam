@@ -16,6 +16,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       user_controller.get_by_id(request: req, context: ctx, id: id)
     ["users", "create-user"] ->
       user_controller.create_user(request: req, context: ctx)
+    ["users", "update-user"] -> user_controller.update_user(request: req, context: ctx)
 
     // All the empty responses
     ["internal-server-error"] -> wisp.internal_server_error()

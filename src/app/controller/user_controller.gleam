@@ -50,3 +50,17 @@ pub fn create_user(request req: wisp.Request, context ctx: web.Context) {
     _ -> wisp.method_not_allowed(allowed: [http.Post])
   }
 }
+
+pub fn update_user(request req: wisp.Request, context ctx: web.Context) {
+  use json_body <- wisp.require_json(req)
+  
+  let request_method = req.method
+  let request_body = user.from_update_user_request(json_body)
+
+  case request_method {
+    http.Put -> {
+      user_service.update_user(context: ctx, user_for_update: request_body)
+    }
+    _ -> wisp.method_not_allowed(allowed: [http.Put])
+  }
+}
