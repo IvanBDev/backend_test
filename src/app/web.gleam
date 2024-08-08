@@ -51,7 +51,13 @@ pub fn default_responses(handle_request: fn() -> wisp.Response) -> wisp.Response
   }
 }
 
-pub fn record_not_found(message message: String) -> wisp.Response {
+pub fn custom_record_not_found(message message: String) -> wisp.Response {
+  let resp = message |> string_builder.from_string |> wisp.html_response(404)
+  pprint.debug(resp)
+  resp
+}
+
+pub fn custom_bad_request(message message: String) -> wisp.Response {
   let resp = message |> string_builder.from_string |> wisp.html_response(404)
   pprint.debug(resp)
   resp

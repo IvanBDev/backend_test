@@ -1,36 +1,52 @@
 import app/service/user_service
+import app/user/user
 import app/web
 import gleam/http
 import gleam/int
 import gleam/result
 import wisp
 
+pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
+  let request_method = req.method
+
+  case request_method {
+    http.Get -> user_service.get_all(ctx)
+    _ -> wisp.method_not_allowed(allowed: [http.Get])
+  }
+}
+
 pub fn get_by_id(
   request req: wisp.Request,
   context ctx: web.Context,
   id id: String,
-) {
-  let method = req.method
-
+) -> wisp.Response {
+  let request_method = req.method
   let user_id = result.try(Ok(id), int.parse)
 
   // Dispatch to the appropriate handler based on the HTTP method.
-  case user_id {
-    Ok(id) -> {
-      case method {
-        http.Get -> user_service.get_one(id, ctx)
-        _ -> wisp.method_not_allowed([http.Get])
+  case request_method {
+    http.Get -> {
+      case user_id {
+        Ok(id) -> {
+          user_service.get_one(id, ctx)
+        }
+        // If I'm here it means that the parsing gave as result a Nil so the id isn't valid
+        Error(Nil) -> web.custom_bad_request("Invalid id [" <> id <> "]")
       }
     }
-    Error(_) -> wisp.bad_request()
+    _ -> wisp.method_not_allowed(allowed: [http.Get])
   }
 }
 
-pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
-  let method = req.method
+pub fn create_user(request req: wisp.Request, context ctx: web.Context) {
+  use json_body <- wisp.require_json(req)
 
-  case method {
-    http.Get -> user_service.get_all(ctx)
-    _ -> wisp.method_not_allowed([http.Get])
+  let request_method = req.method
+  let request_body = user.from_create_user_request(json_body)
+
+  case request_method {
+    http.Post ->
+      user_service.create_user(context: ctx, user_for_create: request_body)
+    _ -> wisp.method_not_allowed(allowed: [http.Post])
   }
 }

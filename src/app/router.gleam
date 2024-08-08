@@ -11,8 +11,11 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     [] -> wisp.html_response(string_builder.from_string("Home"), 200)
 
     // User endpoints
-    ["users", "all"] -> user_controller.get_all(req, ctx)
-    ["users", "get-user", id] -> user_controller.get_by_id(req, ctx, id)
+    ["users", "all"] -> user_controller.get_all(request: req, context: ctx)
+    ["users", "get-user", id] ->
+      user_controller.get_by_id(request: req, context: ctx, id: id)
+    ["users", "create-user"] ->
+      user_controller.create_user(request: req, context: ctx)
 
     // All the empty responses
     ["internal-server-error"] -> wisp.internal_server_error()

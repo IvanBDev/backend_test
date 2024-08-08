@@ -27,7 +27,9 @@ pub fn get_one(id id: Int, context ctx: web.Context) -> wisp.Response {
 
   let user_for_get_by_id =
     get_response_from_db_object_for_get_one_function(output, id)
+
   pprint.debug("---------------- get_one (finish) ------------------")
+
   user_for_get_by_id
 }
 
@@ -41,12 +43,33 @@ pub fn get_all(context ctx: web.Context) -> wisp.Response {
   pprint.debug("Result from query: ")
   pprint.debug(list_of_users)
 
-  let output = list.map(list_of_users, user.from_postgres)
+  let output_from_postgres = list.map(list_of_users, user.from_postgres)
+  // use prova <- list.map(list_of_users)
 
   let user_list_for_get_all =
-    get_response_from_db_object_for_get_all_function(output)
+    get_response_from_db_object_for_get_all_function(output_from_postgres)
+
   pprint.debug("---------------- get_all (finish) ------------------")
+
   user_list_for_get_all
+}
+
+pub fn create_user(
+  context ctx: web.Context,
+  user_for_create user: user.UserForCreate,
+) -> wisp.Response {
+  pprint.debug("---------------- create_user (start) ------------------")
+
+  let query = user_queries_holder.create_user_query(user)
+
+  let assert Ok(user_created) =
+    query |> postgres.run_write_query(dynamic.dynamic, ctx.db)
+  pprint.debug("Result from query: ")
+  pprint.debug(user_created)
+
+  pprint.debug("---------------- create_user (start) ------------------")
+  
+  wisp.created()
 }
 
 fn get_response_from_db_object_for_get_one_function(
@@ -72,7 +95,7 @@ fn get_response_from_db_object_for_get_one_function(
       wisp.json_response(json_user, 200)
     }
     Error(Nil) ->
-      web.record_not_found(
+      web.custom_record_not_found(
         "Il record con id ["
         <> int.to_string(id)
         <> "] non è presente in base dati",
@@ -93,7 +116,7 @@ fn get_response_from_db_object_for_get_all_function(
 
       wisp.json_response(one_for_all, 200)
     }
-    False -> web.record_not_found("Nessun record presente in base dati")
+    False -> web.custom_record_not_found("Nessun record presente in base dati")
   }
 }
 
