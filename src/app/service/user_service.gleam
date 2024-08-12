@@ -6,52 +6,87 @@ import gleam/dynamic
 import gleam/int
 import gleam/json
 import gleam/list
-import gleam/result
+import gleam/pgo
 import gleam/string_builder
 import pprint
 import wisp
 
-pub fn get_one(id id: Int, context ctx: web.Context) -> wisp.Response {
+pub fn get_one(id id: Int, context ctx: web.Context) {
   pprint.debug("---------------- get_one (start) ------------------")
   let query = user_queries_holder.get_by_id_query(id)
 
-  let assert Ok(user_from_query) =
+  // Executing the query
+  let list_of_users_from_query =
     query |> postgres.run_read_query(dynamic.dynamic, ctx.db)
 
-  pprint.debug("Result from query: ")
-  pprint.debug(user_from_query)
+  case list_of_users_from_query {
+    Ok(users) -> {
+      pprint.debug("Result from query: ")
+      pprint.debug(users)
 
-  // The default behavor is to give a List(Dynamic) but since I nedd only one element and the first
-  // I can use list.first function to retrive only one element
-  let output = result.try(Ok(user_from_query), list.first)
+      let single_user = list.first(users)
 
-  let user_for_get_by_id =
-    get_response_from_db_object_for_get_one_function(output, id)
+      case single_user {
+        Ok(user_object) -> {
+          let response =
+            get_response_from_db_object_for_get_one_function(user_object)
 
-  pprint.debug("---------------- get_one (finish) ------------------")
+          pprint.debug("---------------- get_one (end) ------------------")
+          response
+        }
 
-  user_for_get_by_id
+        Error(Nil) -> {
+          web.custom_record_not_found(
+            "Il record con id ["
+            <> int.to_string(id)
+            <> "] non è presente in base dati",
+          )
+        }
+      }
+    }
+
+    Error(query_error) -> {
+      case query_error {
+        pgo.PostgresqlError(code, name, message) -> {
+          let message =
+            "Error code: \t["
+            <> code
+            <> "]\nError type: \t["
+            <> name
+            <> "]\nReason: \t["
+            <> message
+            <> "]"
+          message
+          |> web.custom_internal_server_error
+        }
+        _ ->
+          web.custom_internal_server_error(
+            "An error occurred while processing your request\nWe will send our crack powered programming team to resolve this issue.",
+          )
+      }
+    }
+  }
 }
 
-pub fn get_all(context ctx: web.Context) -> wisp.Response {
-  pprint.debug("---------------- get_all (start) ------------------")
+// pub fn get_all(context ctx: web.Context) -> wisp.Response {
+//   pprint.debug("---------------- get_all (start) ------------------")
 
-  let query = user_queries_holder.get_all_query()
+//   let query = user_queries_holder.get_all_query()
 
-  let assert Ok(list_of_users) =
-    query |> postgres.run_read_query(dynamic.dynamic, ctx.db)
-  pprint.debug("Result from query: ")
-  pprint.debug(list_of_users)
+//   let assert Ok(list_of_users) =
+//     query |> postgres.run_read_query(dynamic.dynamic, ctx.db)
+//   pprint.debug("Result from query: ")
+//   pprint.debug(list_of_users)
 
-  let output_from_postgres = list.map(list_of_users, user.from_postgres)
+//   let output_from_postgres = list.map(list_of_users, user.from_postgres)
 
-  let user_list_for_get_all =
-    get_response_from_db_object_for_get_all_function(output_from_postgres)
+//   let user_list_for_get_all =
+//     get_response_from_db_object_for_get_all_function(output_from_postgres)
 
-  pprint.debug("---------------- get_all (finish) ------------------")
+//   pprint.debug("---------------- get_all (finish) ------------------")
 
-  user_list_for_get_all
-}
+//   user_list_for_get_all
+// }
 
 pub fn create_user(
   context ctx: web.Context,
@@ -88,33 +123,49 @@ pub fn update_user(context ctx: web.Context, user_for_update user: user.User) {
 }
 
 fn get_response_from_db_object_for_get_one_function(
-  result_from_query output: Result(dynamic.Dynamic, Nil),
-  params_needed_for_query id: Int,
-) -> wisp.Response {
-  case output {
-    Ok(value) -> {
-      // Converting the value from the database (Dynamic) to the needed type (User)
-      let user_converted = user.from_postgres(value)
+  result_from_query output: dynamic.Dynamic,
+) {
+  let converted_user = user.from_postgres(output)
 
+  case converted_user {
+    Ok(converted_user_object) -> {
       // Converting the User type into a JSON Object (is basically a list of tuples)
       let json_user =
         json.to_string_builder(
           json.object([
-            #("id", json.int(user_converted.id)),
-            #("username", json.string(user_converted.username)),
-            #("email", json.string(user_converted.email)),
+            #("id", json.int(converted_user_object.id)),
+            #("username", json.string(converted_user_object.username)),
+            #("email", json.string(converted_user_object.email)),
           ]),
         )
 
-      // Return an appropriate response.
+
       wisp.json_response(json_user, 200)
     }
-    Error(Nil) ->
-      web.custom_record_not_found(
-        "Il record con id ["
-        <> int.to_string(id)
-        <> "] non è presente in base dati",
-      )
+
+    Error(err) -> {
+      let message = decode_error_exeption(err, string_builder.new())
+      web.custom_internal_server_error(string_builder.to_string(message))
+    }
+  }
+}
+
+fn decode_error_exeption(
+  list_of_decode_error list_decode_error: List(dynamic.DecodeError),
+  message_for_user message: string_builder.StringBuilder,
+) {
+  case list_decode_error {
+    [] -> message
+    [first, ..rest] -> {
+      let return =
+        string_builder.append(
+          message,
+          "Expected: \t[" <> first.expected <> "]\n",
+        )
+        |> string_builder.append("Found: \t[" <> first.found <> "\n")
+
+      decode_error_exeption(rest, return)
+    }
   }
 }
 

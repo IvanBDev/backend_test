@@ -68,7 +68,10 @@ pub fn with_connection(f: fn(Connection) -> a, config config: pgo.Config) -> a {
 
 pub fn run_read_query(query qry: ReadQuery, decoder dcdr, db_connection db_conn) {
   let prp_stm = read_query_to_prepared_statement(qry)
-  let sql = cake.get_sql(prp_stm) |> pprint.debug
+
+  let sql = cake.get_sql(prp_stm)
+  pprint.debug("Query: [" <> sql <> "]")
+  
   let params = cake.get_params(prp_stm)
 
   let db_params =
