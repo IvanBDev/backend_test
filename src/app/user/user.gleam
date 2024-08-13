@@ -8,7 +8,7 @@ pub type UserForCreate {
   UserForCreate(username: String, email: String)
 }
 
-pub fn from_postgres(database_row data: dynamic.Dynamic) {
+pub fn from_postgres(database_row data: dynamic.Dynamic) -> Result(User, List(dynamic.DecodeError)) {
   let user =
     data
     |> dynamic.from
@@ -22,14 +22,10 @@ pub fn from_postgres(database_row data: dynamic.Dynamic) {
   user
 }
 
-// pub fn prova_list(dynamic_list data: List(dynamic.Dynamic)) {
-//   let user = dynamic.from(data) |> dynamic.list(of: User)
-// }
-
-pub fn from_create_user_request(json: dynamic.Dynamic) {
+pub fn from_create_user_request(json: dynamic.Dynamic) -> Result(UserForCreate, List(dynamic.DecodeError)) {
   // Checks to see if a Dynamic value is a map with a specific field, and returns the value of that field if it is. -gleam_stdlib docs
   // Given this description from the documentation we can use .field beacause the JSON format is essentially a map
-  let assert Ok(user) =
+  let user =
     json
     |> dynamic.from
     |> dynamic.decode2(

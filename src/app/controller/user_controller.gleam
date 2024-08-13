@@ -1,8 +1,11 @@
+import gleam/io
+import app/exception/exception
 import app/service/user_service
 import app/user/user
 import app/web
 import gleam/http
 import gleam/int
+import gleam/string_builder
 import wisp
 
 pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
@@ -35,14 +38,29 @@ pub fn get_by_id(
 }
 
 pub fn create_user(request req: wisp.Request, context ctx: web.Context) {
-  use json_body <- wisp.require_json(req)
-
   let request_method = req.method
-  let request_body = user.from_create_user_request(json_body)
-
   case request_method {
-    http.Post ->
-      user_service.create_user(context: ctx, user_for_create: request_body)
+    http.Post -> {
+      use json_body <- wisp.require_json(req)
+      let request_body = user.from_create_user_request(json_body)
+
+      case request_body {
+        Ok(body) -> {
+          user_service.create_user(context: ctx, user_for_create: body)
+        }
+
+        Error(list_of_decode_error) -> {
+          io.debug(list_of_decode_error)
+          //In Gleam 1.4.x if you have the same name in both label and variable tou can write [variable_name:] 
+          let message =
+            string_builder.new()
+            |> exception.decode_error_exeption(list_of_decode_error:)
+            |> string_builder.to_string
+
+          web.custom_internal_server_error(message:)
+        }
+      }
+    }
     _ -> wisp.method_not_allowed(allowed: [http.Post])
   }
 }
