@@ -95,3 +95,28 @@ pub fn update_user(request req: wisp.Request, context ctx: web.Context) {
     _ -> wisp.method_not_allowed(allowed: [http.Post])
   }
 }
+
+pub fn delete_user(
+  request req: wisp.Request,
+  context ctx: web.Context,
+  id id: String,
+) {
+  let request_method = req.method
+
+  case request_method {
+    http.Delete -> {
+      let id_from_request = int.parse(id)
+
+      case id_from_request {
+        Ok(user_id) -> {
+          user_service.delete_user(user_id:, context: ctx)
+        }
+        Error(Nil) -> web.custom_bad_request("Invalid ID: \t[" <> id <> "]")
+      }
+    }
+    
+    _ -> {
+      wisp.method_not_allowed(allowed: [http.Delete])
+    }
+  }
+}

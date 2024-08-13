@@ -9,7 +9,6 @@ import cake/param.{
 import dot_env
 import dot_env/env
 import gleam/dynamic
-import gleam/io
 import gleam/list
 import gleam/option.{Some}
 import gleam/pgo.{type Connection, type Value}
@@ -108,8 +107,6 @@ pub fn run_write_query(
   pprint.debug("Query: [" <> sql <> "]")
 
   let params = cake.get_params(prp_stm)
-
-  io.print("Params: ")
 
   let db_params =
     params

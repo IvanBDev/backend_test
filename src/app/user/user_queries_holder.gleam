@@ -1,4 +1,5 @@
 import app/user/user
+import cake/delete
 import cake/insert
 import cake/select
 import cake/update
@@ -26,7 +27,7 @@ pub fn get_all_query() -> select.ReadQuery {
 
 pub fn create_user_query(
   user_from_request user: user.UserForCreate,
-) -> insert.WriteQuery(_) {
+) -> insert.WriteQuery(user.User) {
   [[insert.string(user.username), insert.string(user.email)] |> insert.row]
   |> insert.from_values(table_name: "public.user", columns: [
     "username", "email",
@@ -36,7 +37,7 @@ pub fn create_user_query(
 
 pub fn update_user_query(
   user_from_request user: user.User,
-) -> update.WriteQuery(_) {
+) -> update.WriteQuery(user.User) {
   update.new()
   |> update.table(table_name: "public.user")
   |> update.sets(set: [
@@ -46,4 +47,14 @@ pub fn update_user_query(
   |> update.where(where.eq(where.col("id"), where.int(user.id)))
   |> update.returning(["id", "username", "email"])
   |> update.to_query()
+}
+
+pub fn delete_user_query(user_id user_id: Int) {
+  delete.new()
+  |> delete.table(table_name: "public.user")
+  |> delete.where(
+    where.col("id")
+    |> where.eq(where.int(user_id)),
+  )
+  |> delete.to_query()
 }
