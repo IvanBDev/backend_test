@@ -29,9 +29,11 @@ pub fn get_one(id id: Int, context ctx: web.Context) -> wisp.Response {
       let single_user = list.first(users)
 
       case single_user {
-        Ok(user_object) -> {
+        Ok(db_user_object) -> {
           let response =
-            get_response_from_db_object_for_get_one_function(user_object)
+            get_response_from_the_conversion_of_the_db_object_to_user_object(
+              db_user_object:
+            )
 
           pprint.debug("---------------- get_one (end) ------------------")
           response
@@ -95,12 +97,12 @@ pub fn get_all(context ctx: web.Context) -> wisp.Response {
             |> get_response_from_db_object_for_get_all_function
             |> wisp.json_response(200)
 
-          pprint.debug("---------------- get_all (finish) ------------------")
+          pprint.debug("---------------- get_all (end) ------------------")
 
           response
         }
         Error(list_of_decode_error) -> {
-          //In Gleam 1.4.x if you have the same name in both label and variable tou can write [variable_name:] 
+          //In Gleam 1.4.x if you have the same name in both label and variable, you can write [variable_name:] 
           let message =
             string_builder.new()
             |> exception.decode_error_exeption(list_of_decode_error:)
@@ -160,7 +162,7 @@ pub fn create_user(
       pprint.debug("Result from query: ")
       pprint.debug(value)
 
-      pprint.debug("---------------- create_user (start) ------------------")
+      pprint.debug("---------------- create_user (end) ------------------")
 
       wisp.created()
     }
@@ -187,24 +189,69 @@ pub fn create_user(
   }
 }
 
-pub fn update_user(context ctx: web.Context, user_for_update user: user.User) -> wisp.Response {
+pub fn update_user(
+  context ctx: web.Context,
+  user_for_update user: user.User,
+) -> wisp.Response {
   pprint.debug("---------------- update_user (start) ------------------")
 
   let query = user_queries_holder.update_user_query(user)
 
-  let assert Ok(user_updated) =
-    query |> postgres.run_write_query(dynamic.dynamic, ctx.db)
+  let user_updated = query |> postgres.run_write_query(dynamic.dynamic, ctx.db)
 
-  pprint.debug("Result from query: ")
-  pprint.debug(user_updated)
+  case user_updated {
+    Ok(user_object) -> {
+      pprint.debug("Result from query: ")
+      pprint.debug(user_object)
 
-  pprint.debug("---------------- update_user (end) ------------------")
+      let single_user = list.first(user_object)
 
-  web.custom_created("Record aggiornato correttamente")
+      case single_user {
+        Ok(single_user) -> {
+          let return =
+            get_response_from_the_conversion_of_the_db_object_to_user_object(
+              single_user,
+            )
+
+          pprint.debug("---------------- update_user (end) ------------------")
+
+          return
+        }
+
+        Error(Nil) -> {
+          web.custom_record_not_found(
+            "Il record con id ["
+            <> int.to_string(user.id)
+            <> "] non è presente in base dati",
+          )
+        }
+      }
+    }
+    Error(query_error) -> {
+      case query_error {
+        pgo.PostgresqlError(code, name, message) -> {
+          let message =
+            "Error code: \t["
+            <> code
+            <> "]\nError type: \t["
+            <> name
+            <> "]\nReason: \t["
+            <> message
+            <> "]"
+          message
+          |> web.custom_internal_server_error
+        }
+        _ ->
+          web.custom_internal_server_error(
+            "An error occurred while processing your request\nWe will send our crack powered programming team to resolve this issue.",
+          )
+      }
+    }
+  }
 }
 
-fn get_response_from_db_object_for_get_one_function(
-  result_from_query output: dynamic.Dynamic,
+fn get_response_from_the_conversion_of_the_db_object_to_user_object(
+  db_user_object output: dynamic.Dynamic,
 ) -> wisp.Response {
   let converted_user = user.from_postgres(output)
 
@@ -223,7 +270,7 @@ fn get_response_from_db_object_for_get_one_function(
     }
 
     Error(list_of_decode_error) -> {
-      //In Gleam 1.4.x if you have the same name in both label and variable tou can write [variable_name:] 
+      //In Gleam 1.4.x if you have the same name in both label and variable, you can write [variable_name:] 
       let message =
         string_builder.new()
         |> exception.decode_error_exeption(list_of_decode_error:)

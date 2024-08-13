@@ -71,7 +71,7 @@ pub fn run_read_query(query qry: ReadQuery, decoder dcdr, db_connection db_conn)
 
   let sql = cake.get_sql(prp_stm)
   pprint.debug("Query: [" <> sql <> "]")
-  
+
   let params = cake.get_params(prp_stm)
 
   let db_params =
@@ -103,7 +103,10 @@ pub fn run_write_query(
   db_connection db_conn,
 ) {
   let prp_stm = write_query_to_prepared_statement(qry)
-  let sql = cake.get_sql(prp_stm) |> pprint.debug
+
+  let sql = cake.get_sql(prp_stm)
+  pprint.debug("Query: [" <> sql <> "]")
+
   let params = cake.get_params(prp_stm)
 
   io.print("Params: ")
@@ -119,7 +122,9 @@ pub fn run_write_query(
         NullParam -> pgo.null()
       }
     })
-    |> pprint.debug
+
+  pprint.debug("Parametri passati al Database: ")
+  pprint.debug(db_params)
 
   let result = sql |> pgo.execute(on: db_conn, with: db_params, expecting: dcdr)
 

@@ -40,10 +40,10 @@ pub fn update_user_query(
   update.new()
   |> update.table(table_name: "public.user")
   |> update.sets(set: [
-    // "id" |> update.set_int(user.id),
     "username" |> update.set_string(user.username),
     "email" |> update.set_string(user.email),
   ])
   |> update.where(where.eq(where.col("id"), where.int(user.id)))
+  |> update.returning(["id", "username", "email"])
   |> update.to_query()
 }
