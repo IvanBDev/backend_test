@@ -11,7 +11,7 @@ pub fn handle_request(req: wisp.Request, ctx: web.Context) -> wisp.Response {
     [] -> wisp.html_response(string_builder.from_string("Home"), 200)
 
     // User endpoints
-    // ["users", "all"] -> user_controller.get_all(request: req, context: ctx)
+    ["users", "all"] -> user_controller.get_all(request: req, context: ctx)
     ["users", "get-user", id] ->
       user_controller.get_by_id(request: req, context: ctx, id: id)
     ["users", "update-user"] ->

@@ -20,19 +20,11 @@ pub fn from_postgres(database_row data: dynamic.Dynamic) {
     )
 
   user
-  // NOTICE: This will crash, if the returned data from the SQL query does not match
-  // let assert Ok(user) =
-  //   data
-  //   |> dynamic.from
-  //   |> dynamic.decode3(
-  //     User,
-  //     dynamic.element(at: 0, of: dynamic.int),
-  //     dynamic.element(at: 1, of: dynamic.string),
-  //     dynamic.element(at: 4, of: dynamic.string),
-  //   )
-
-  // user
 }
+
+// pub fn prova_list(dynamic_list data: List(dynamic.Dynamic)) {
+//   let user = dynamic.from(data) |> dynamic.list(of: User)
+// }
 
 pub fn from_create_user_request(json: dynamic.Dynamic) {
   // Checks to see if a Dynamic value is a map with a specific field, and returns the value of that field if it is. -gleam_stdlib docs

@@ -20,6 +20,7 @@ pub fn get_all_query() -> select.ReadQuery {
   select.new()
   |> select.select(select.col("*"))
   |> select.from_table("public.user")
+  |> select.order_by("id", select.Asc)
   |> select.to_query()
 }
 

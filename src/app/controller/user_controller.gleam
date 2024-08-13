@@ -5,14 +5,14 @@ import gleam/http
 import gleam/int
 import wisp
 
-// pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
-//   let request_method = req.method
+pub fn get_all(request req: wisp.Request, context ctx: web.Context) {
+  let request_method = req.method
 
-//   case request_method {
-//     http.Get -> user_service.get_all(ctx)
-//     _ -> wisp.method_not_allowed(allowed: [http.Get])
-//   }
-// }
+  case request_method {
+    http.Get -> user_service.get_all(ctx)
+    _ -> wisp.method_not_allowed(allowed: [http.Get])
+  }
+}
 
 pub fn get_by_id(
   request req: wisp.Request,

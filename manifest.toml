@@ -4,7 +4,7 @@
 packages = [
   { name = "backoff", version = "1.1.6", build_tools = ["rebar3"], requirements = [], otp_app = "backoff", source = "hex", outer_checksum = "CF0CFFF8995FB20562F822E5CC47D8CCF664C5ECDC26A684CBE85C225F9D7C39" },
   { name = "birl", version = "1.7.1", build_tools = ["gleam"], requirements = ["gleam_stdlib", "ranger"], otp_app = "birl", source = "hex", outer_checksum = "5C66647D62BCB11FE327E7A6024907C4A17954EF22865FE0940B54A852446D01" },
-  { name = "cake", version = "1.0.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "cake", source = "hex", outer_checksum = "2ED23B98F04EAA594148A8072746385B8ED77E0288F7AF30F7D9180FDAF620D5" },
+  { name = "cake", version = "1.1.1", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "cake", source = "hex", outer_checksum = "A1C704845F581A85A5C29F0620298D718D5763BB78126A4CF1414E66AAF68233" },
   { name = "dot_env", version = "1.1.0", build_tools = ["gleam"], requirements = ["gleam_stdlib", "simplifile"], otp_app = "dot_env", source = "hex", outer_checksum = "C791917FDA9B75AF26923C17CE2BC15469E1B2C79D9D9F3D0882B3C531EE6337" },
   { name = "exception", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "F5580D584F16A20B7FCDCABF9E9BE9A2C1F6AC4F9176FA6DD0B63E3B20D450AA" },
   { name = "filepath", version = "1.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "filepath", source = "hex", outer_checksum = "EFB6FF65C98B2A16378ABC3EE2B14124168C0CE5201553DE652E2644DCFDB594" },
@@ -40,7 +40,7 @@ cake = { version = ">= 1.0.1 and < 2.0.0" }
 dot_env = { version = ">= 1.1.0 and < 2.0.0" }
 gleam_erlang = { version = ">= 0.25.0 and < 1.0.0" }
 gleam_http = { version = ">= 3.6.0 and < 4.0.0" }
-gleam_httpc = { version = ">= 2.2.0 and < 3.0.0"}
+gleam_httpc = { version = ">= 2.2.0 and < 3.0.0" }
 gleam_json = { version = ">= 1.0.1 and < 2.0.0" }
 gleam_pgo = { version = ">= 0.13.0 and < 1.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 2.0.0" }

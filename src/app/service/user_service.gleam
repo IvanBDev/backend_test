@@ -7,6 +7,7 @@ import gleam/int
 import gleam/json
 import gleam/list
 import gleam/pgo
+import gleam/result
 import gleam/string_builder
 import pprint
 import wisp
@@ -68,25 +69,75 @@ pub fn get_one(id id: Int, context ctx: web.Context) {
   }
 }
 
-// pub fn get_all(context ctx: web.Context) -> wisp.Response {
-//   pprint.debug("---------------- get_all (start) ------------------")
+pub fn get_all(context ctx: web.Context) -> wisp.Response {
+  pprint.debug("---------------- get_all (start) ------------------")
 
-//   let query = user_queries_holder.get_all_query()
+  let query = user_queries_holder.get_all_query()
 
-//   let assert Ok(list_of_users) =
-//     query |> postgres.run_read_query(dynamic.dynamic, ctx.db)
-//   pprint.debug("Result from query: ")
-//   pprint.debug(list_of_users)
+  // Executing the query
+  let list_of_dynamic_users_from_query =
+    query |> postgres.run_read_query(dynamic.dynamic, ctx.db)
 
-//   let output_from_postgres = list.map(list_of_users, user.from_postgres)
+  case list_of_dynamic_users_from_query {
+    Ok(dynamic_users) -> {
+      pprint.debug("Result from query: ")
+      pprint.debug(dynamic_users)
 
-//   let user_list_for_get_all =
-//     get_response_from_db_object_for_get_all_function(output_from_postgres)
+      // Combines a list of results into a single result.
+      let list_of_users =
+        list.map(dynamic_users, user.from_postgres) |> result.all()
 
-//   pprint.debug("---------------- get_all (finish) ------------------")
+      case list_of_users {
+        Ok(users) -> {
+          let response =
+            users
+            |> get_response_from_db_object_for_get_all_function
+            |> wisp.json_response(200)
 
-//   user_list_for_get_all
-// }
+          pprint.debug("---------------- get_all (finish) ------------------")
+
+          response
+        }
+        Error(list_of_decode_error) -> {
+          let message = decode_error_exeption(list_of_decode_error: list_of_decode_error, message_for_user: string_builder.new())
+          web.custom_internal_server_error(message: string_builder.to_string(message))
+        }
+      }
+    }
+    Error(query_error) -> {
+      case query_error {
+        pgo.PostgresqlError(code, name, message) -> {
+          let message =
+            "Error code: \t["
+            <> code
+            <> "]\nError type: \t["
+            <> name
+            <> "]\nReason: \t["
+            <> message
+            <> "]"
+          message
+          |> web.custom_internal_server_error
+        }
+        _ ->
+          web.custom_internal_server_error(
+            "An error occurred while processing your request\nWe will send our crack powered programming team to resolve this issue.",
+          )
+      }
+    }
+  }
+}
+
+fn get_response_from_db_object_for_get_all_function(
+  list_of_users list_in: List(user.User),
+) {
+  // Converting the User type into a JSON Object (is basically a list of tuples)
+  let json_user_list = convert_user_list_to_json_list(list_in, [])
+
+  // Converting a List(StringBuilder) into one StringBuilder
+  let return = string_builder.concat(json_user_list)
+
+  return
+}
 
 pub fn create_user(
   context ctx: web.Context,
@@ -139,7 +190,6 @@ fn get_response_from_db_object_for_get_one_function(
           ]),
         )
 
-
       wisp.json_response(json_user, 200)
     }
 
@@ -169,24 +219,7 @@ fn decode_error_exeption(
   }
 }
 
-fn get_response_from_db_object_for_get_all_function(
-  list_of_users list: List(user.User),
-) {
-  case !list.is_empty(list) {
-    True -> {
-      // Converting the User type into a JSON Object (is basically a list of tuples)
-      let json_user_list = user_list_to_json_converter(list, [])
-
-      // Converting a List(StringBuilder) into one StringBuilder
-      let one_for_all = string_builder.concat(json_user_list)
-
-      wisp.json_response(one_for_all, 200)
-    }
-    False -> web.custom_record_not_found("Nessun record presente in base dati")
-  }
-}
-
-fn user_list_to_json_converter(
+fn convert_user_list_to_json_list(
   list list: List(user.User),
   accumulator acc: List(string_builder.StringBuilder),
 ) {
@@ -206,7 +239,7 @@ fn user_list_to_json_converter(
       ]
 
       let json_result = list.append(acc, json_user)
-      user_list_to_json_converter(rest, json_result)
+      convert_user_list_to_json_list(rest, json_result)
     }
   }
 }
